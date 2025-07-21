@@ -40,11 +40,5 @@ public class MenuItemController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/api/admin-only")
-    @PreAuthorize("hasRole('ADMIN')") // You can also try hasAuthority("ROLE_ADMIN")
-    public ResponseEntity<String> adminEndpoint() {
-        System.out.println("[AdminController] Admin endpoint hit!");
-        return ResponseEntity.ok("You are an ADMIN!");
-    }
 }
 

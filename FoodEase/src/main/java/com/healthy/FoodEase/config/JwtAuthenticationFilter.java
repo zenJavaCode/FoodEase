@@ -1,3 +1,4 @@
+// JwtAuthenticationFilter.java
 package com.healthy.FoodEase.config;
 
 import com.healthy.FoodEase.services.JwtService;
@@ -33,19 +34,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String userEmail;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("[JwtAuthFilter] Missing or invalid Authorization header.");
+            System.out.println("[JwtAuthFilter] ❌ Missing or invalid Authorization header.");
             filterChain.doFilter(request, response);
             return;
         }
 
         jwt = authHeader.substring(7);
-        userEmail = jwtService.extractUsername(jwt);
-        System.out.println("[JwtAuthFilter] Extracted username: " + userEmail);
+        try {
+            userEmail = jwtService.extractUsername(jwt);
+            System.out.println("[JwtAuthFilter] ✅ Extracted username from token: " + userEmail);
+        } catch (Exception e) {
+            System.out.println("[JwtAuthFilter] ❌ Error while parsing token: " + e.getMessage());
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
-            System.out.println("[JwtAuthFilter] Loaded user details: " + userDetails.getUsername());
-            System.out.println("[JwtAuthFilter] Authorities: " + userDetails.getAuthorities());
+            System.out.println("[JwtAuthFilter] ✅ Loaded user: " + userDetails.getUsername());
+            System.out.println("[JwtAuthFilter] 🛡️ Authorities: " + userDetails.getAuthorities());
 
             if (jwtService.isTokenValid(jwt, userDetails.getUsername())) {
                 UsernamePasswordAuthenticationToken authToken =
@@ -53,9 +60,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-                System.out.println("[JwtAuthFilter] Authentication successful.");
+                System.out.println("[JwtAuthFilter] ✅ Authentication set in context.");
             } else {
-                System.out.println("[JwtAuthFilter] JWT token is invalid.");
+                System.out.println("[JwtAuthFilter] ❌ JWT token is invalid or expired.");
             }
         }
 
